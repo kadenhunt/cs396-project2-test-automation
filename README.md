@@ -1,24 +1,42 @@
-````markdown
 # CS 396 Project 2 – Test Automation Framework
 
 ## Team
 - Kaden Hunt  
 - Nate Barner
 
-## Overview
-This project implements a **test automation framework** that improves code quality through unit, integration, and system testing.  
-It integrates with CI/CD pipelines to provide automated execution, reporting, and code coverage analysis.
+Overview
 
-A small **dummy application** (in `/app`) is included as the target system for demonstration purposes.
+This project delivers a test automation framework designed to improve code quality in a distributed disaster response coordination system.
+It supports unit, integration, and system testing to catch defects early, while integrating with CI/CD pipelines for automated execution and immediate feedback.
 
-## Features
-- **Unit tests** for isolated components  
-- **Integration tests** for application + database interactions  
-- **System tests** for end-to-end workflows  
-- **Test case management** using YAML/JSON (`tests/cases/`)  
-- **Runner script** (`runner.py`) to launch tests by type or case ID  
-- **Reporting** with pass/fail, error details, and coverage percentage  
-- **CI/CD** via GitHub Actions for automated runs on every push  
+The framework emphasizes scalability, speed, and security, ensuring reliable test runs in under five minutes, with robust error handling and secure configuration management.
+A small dummy application (in /app) is included as the demonstration target system.
+
+Features
+
+- Unit tests for isolated components
+
+- Integration tests for application + database interactions
+
+- System tests for end-to-end workflows
+
+- Test case management using structured YAML/JSON files (tests/cases/) with easy creation, modification, and organization
+
+- Runner script (runner.py) to launch tests by type or case ID via a simple CLI
+
+- Reporting with pass/fail summaries, error logs, coverage metrics, and historical tracking
+
+- Error handling & logging to capture failures and exceptions with actionable detail
+
+- CI/CD integration via GitHub Actions for automated runs on every push or pull request
+
+- Fast execution optimized to complete test suites within minutes for rapid feedback
+
+- Scalability to support growth in both number and complexity of test cases without performance loss
+
+- Security practices to protect test data and configuration details
+
+- Usability through clear folder structure, documentation, and onboarding guidance for new developers
 
 ## Requirements
 - Python 
