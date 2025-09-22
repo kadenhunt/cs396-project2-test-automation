@@ -26,7 +26,7 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        pytest . --junitxml=results.xml --cov=disaster_app --cov-report=xml --cov-report=term
+        pytest tests/ --junitxml=results.xml --cov=disaster_app --cov-report=xml --cov-report=term
 
     - name: Generate final report
       run: |
