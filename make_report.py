@@ -6,6 +6,39 @@ import json                  # for writing the final report as JSON
 
 def parse_junit(junit_file):
     """Parse JUnit XML (pytest results) and return summary + failure details."""
+    tree = ET.parse(junit_file)
+    root = tree.getroot()
+
+    # Pytest may wrap everything in <testsuites> → find the first <testsuite>
+    suite = root.find("testsuite") if root.tag == "testsuites" else root
+
+    total = int(suite.attrib.get("tests", 0))
+    failures = int(suite.attrib.get("failures", 0))
+    errors = int(suite.attrib.get("errors", 0))
+    skipped = int(suite.attrib.get("skipped", 0))
+    passed = total - failures - errors - skipped
+
+    failure_details = []
+    for testcase in suite.iter("testcase"):
+        for failure in testcase.iter("failure"):
+            failure_details.append({
+                "test": testcase.attrib.get("name"),
+                "classname": testcase.attrib.get("classname"),
+                "error": failure.attrib.get("message", "").strip(),
+                "details": failure.text.strip() if failure.text else ""
+            })
+
+    return {
+        "summary": {
+            "total": total,
+            "passed": passed,
+            "failed": failures,
+            "errors": errors,
+            "skipped": skipped
+        },
+        "failures": failure_details
+    }
+    """Parse JUnit XML (pytest results) and return summary + failure details."""
     tree = ET.parse(junit_file)   # load the XML tree from file
     root = tree.getroot()         # get the root element <testsuite>
 
