@@ -26,7 +26,11 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        pytest --junitxml=results.xml --cov=disaster_app --cov-report=html --cov-report=term
+        pytest --junitxml=results.xml --cov=disaster_app --cov-report=xml --cov-report=term
+
+    - name: Generate final report
+      run: |
+        python make_report.py results.xml coverage.xml final_report.json
 
     - name: Upload test results (JUnit XML)
       uses: actions/upload-artifact@v4
@@ -34,8 +38,14 @@ jobs:
         name: junit-results
         path: results.xml
 
-    - name: Upload coverage report (HTML)
+    - name: Upload coverage report (XML)
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: htmlcov
+        path: coverage.xml
+
+    - name: Upload final combined report
+      uses: actions/upload-artifact@v4
+      with:
+        name: final-report
+        path: final_report.json
