@@ -4,7 +4,11 @@ import pytest
 from disaster_app import parse_emergency_report, assign_responder, update_responder, send_alert
 
 def test_disaster_integration():
-    responders = {"Joe":"available", "Lamar":"available", "Josh":"available"}
+    responders = {
+        "Joe":"available", 
+        "Lamar":"available", 
+        "Josh":"available"
+    }
     report = {"location": "NYC", "severity": 3}
 
     #parse the incoming report so the data is correctly formatted
