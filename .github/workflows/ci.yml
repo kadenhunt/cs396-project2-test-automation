@@ -9,7 +9,6 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -24,14 +23,28 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    # Restore history.json from last run (if exists)
+    - name: Download previous history
+      uses: actions/download-artifact@v4
+      with:
+        name: history
+        path: reports
+      continue-on-error: true  # don't fail if first run has no history
+
     - name: Run tests with coverage
       run: |
         PYTHONPATH=. pytest tests/ --junitxml=results.xml --cov=disaster_app --cov-report=xml --cov-report=term
 
-
     - name: Generate final report
       run: |
-        python make_report.py results.xml coverage.xml final_report.json
+        python make_report.py results.xml coverage.xml reports/final_report.json
+
+    # Upload updated history.json so next run can use it
+    - name: Upload updated history
+      uses: actions/upload-artifact@v4
+      with:
+        name: history
+        path: reports/history.json
 
     - name: Upload test results (JUnit XML)
       uses: actions/upload-artifact@v4
@@ -49,4 +62,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: final-report
-        path: final_report.json
+        path: reports/final_report.json

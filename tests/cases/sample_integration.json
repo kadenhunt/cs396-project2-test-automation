@@ -1,0 +1,19 @@
+{
+  "id": "TC_INT001",
+  "type": "integration",
+  "description": "Simulate end-to-end response for a single report",
+  "responders": {
+    "Joe": "available",
+    "Lamar": "available",
+    "Josh": "available"
+  },
+  "report": {
+    "location": "NYC",
+    "severity": 3
+  },
+  "expected": {
+    "alert_contains": "NYC",
+    "assigned_status": "busy",
+    "final_status": "available"
+  }
+}
