@@ -5,6 +5,9 @@ import os
 import logging
 from datetime import datetime
 
+
+os.makedirs("reports", exist_ok=True)
+
 # Configure logging
 logging.basicConfig(
     filename="reports/report.log",
