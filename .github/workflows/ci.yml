@@ -23,15 +23,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Restore history.json from last run (if exists)
-    - name: Download previous history
-      uses: actions/download-artifact@v4
-      with:
-        name: history
-        path: reports
-      continue-on-error: true
-
-
+    
     - name: Run tests with coverage
       run: |
         PYTHONPATH=. pytest tests/ --junitxml=results.xml --cov=disaster_app --cov-report=xml --cov-report=term
