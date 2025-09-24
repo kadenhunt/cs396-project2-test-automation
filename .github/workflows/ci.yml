@@ -6,12 +6,17 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: write
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -23,13 +28,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-        # Restore history.json from last run (if exists)
-    - name: Restore history.json
-      run: |
-        mkdir -p reports
-        echo "Trying to restore previous history..."
-        gh run download --name history --dir reports || echo "No previous history found, starting fresh."
-
     - name: Run tests with coverage
       run: |
         PYTHONPATH=. pytest tests/ --junitxml=results.xml --cov=disaster_app --cov-report=xml --cov-report=term
@@ -38,7 +36,19 @@ jobs:
       run: |
         python make_report.py results.xml coverage.xml reports/final_report.json
 
-    # Upload updated history.json so next run can use it
+    - name: Commit updated reports
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add reports/history.json reports/final_report.json
+        if git diff --staged --quiet; then
+          echo "No report updates to commit."
+        else
+          git commit -m "chore: update automated test reports"
+          git push
+        fi
+
     - name: Upload updated history
       uses: actions/upload-artifact@v4
       with:

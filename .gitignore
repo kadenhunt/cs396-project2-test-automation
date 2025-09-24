@@ -207,7 +207,6 @@ marimo/_lsp/
 __marimo__/
 
 # Test reports and logs
-reports/
+reports/report.log
 results.xml
 coverage.xml
-final_report.json
