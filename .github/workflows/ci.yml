@@ -29,7 +29,7 @@ jobs:
       with:
         name: history
         path: reports
-      continue-on-error: true  # don't fail if first run has no history
+        if-no-files-found: ignore
 
     - name: Run tests with coverage
       run: |
