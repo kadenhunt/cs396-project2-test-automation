@@ -23,7 +23,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    
+        # Restore history.json from last run (if exists)
+    - name: Restore history.json
+      run: |
+        mkdir -p reports
+        echo "Trying to restore previous history..."
+        gh run download --name history --dir reports || echo "No previous history found, starting fresh."
+
     - name: Run tests with coverage
       run: |
         PYTHONPATH=. pytest tests/ --junitxml=results.xml --cov=disaster_app --cov-report=xml --cov-report=term
