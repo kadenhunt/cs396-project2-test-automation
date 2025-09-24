@@ -14,7 +14,7 @@ This project delivers a test automation framework for a distributed disaster res
 - Improve reliability by catching defects early.
 - Provide fast, automated test execution (<5 minutes).
 - Scale to support additional test cases and workflows.
-- Protect test data by managing reports securely through CI artifacts.
+- Protect test data while keeping historical reports version-controlled.
 
 ## Features
 
@@ -28,9 +28,9 @@ This project delivers a test automation framework for a distributed disaster res
     python runner.py --type unit   # run all unit tests  
     python runner.py --case TC001  # run a specific case  
     ```
-- **Reporting (`make_report.py`)** – Combines test results and coverage into `final_report.json`, appends results to `history.json`, and prints trend summaries to the console.
-- **Logging & error handling** – All report generation wrapped with robust logging (`reports/report.log`).
-- **CI/CD integration** – GitHub Actions workflow runs on each push/PR, executes the full test suite, manages historical results, and uploads artifacts (`results.xml`, `coverage.xml`, `final_report.json`, `history.json`).
+- **Reporting (`make_report.py`)** – Combines test results and coverage into `reports/final_report.json`, appends results to `reports/history.json`, computes deltas, and prints trend summaries to the console.
+- **Logging & error handling** – All report generation wrapped with robust logging (`reports/report.log`, generated locally and ignored by git).
+- **CI/CD integration** – GitHub Actions workflow runs on each push/PR, executes the full test suite, manages historical results, and uploads artifacts (`results.xml`, `coverage.xml`, `reports/final_report.json`, `reports/history.json`).
 
 ## Repository Structure
 
@@ -40,17 +40,17 @@ cs396-project2-test-automation/
 │── make_report.py           # combines test results, coverage, history
 │── runner.py                # CLI runner for test cases
 │── requirements.txt         # dependencies (pytest, pytest-cov)
-│── .gitignore               # excludes reports and generated files
+│── .gitignore               # excludes build artifacts (keeps versioned reports)
 │── .github/workflows/ci.yml # CI/CD pipeline config
 │── tests/
 │   ├── test_disaster_unit.py
 │   ├── test_disaster_integration.py
 │   ├── test_disaster_system.py
 │   └── cases/               # JSON test case definitions
-│── reports/ (ignored in git, generated at runtime)
-        ├── final_report.json     # latest combined results
-        ├── history.json          # historical trends
-        └── report.log            # error/info logs
+│── reports/
+        ├── final_report.json     # latest combined results (committed for reference)
+        ├── history.json          # historical trends tracked in git
+        └── report.log            # error/info logs (ignored from version control)
 ```
 
 ## Setup
@@ -60,9 +60,9 @@ cs396-project2-test-automation/
      pip install -r requirements.txt
      ```
 
-2. Run all tests locally with coverage:
+2. Run all tests locally with coverage and export the artifacts expected by the report generator:
      ```bash
-     pytest tests/ --cov=disaster_app
+     PYTHONPATH=. pytest tests/ --junitxml=results.xml --cov=disaster_app --cov-report=xml --cov-report=term
      ```
 
 3. Generate a combined report manually:
@@ -78,7 +78,7 @@ On each push or pull request to `main`:
 2. `runner.py` can be used to list or run test cases.
 3. `pytest` executes all unit, integration, and system tests with coverage.
 4. `make_report.py` produces a final combined report, appends history, and prints a trend summary in the console.
-5. Reports and history are uploaded as artifacts for download from the Actions tab.  
+5. Updated `reports/history.json` and `reports/final_report.json` are committed back to `main`, and artifacts remain available for download from the Actions tab.
 
 
 ## Closing Note
