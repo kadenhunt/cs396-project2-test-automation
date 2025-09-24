@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-09-24T04:09:12.307138",
+  "timestamp": "2025-09-24T04:17:36.891916",
   "summary": {
     "total": 9,
     "passed": 9,
@@ -21,8 +21,8 @@
     ]
   },
   "delta": {
-    "coverage_change": "N/A",
-    "passed_change": "N/A",
-    "failed_change": "N/A"
+    "coverage_change": "0.0%",
+    "passed_change": 0,
+    "failed_change": 0
   }
 }

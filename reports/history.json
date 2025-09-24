@@ -26,5 +26,33 @@
       "passed_change": "N/A",
       "failed_change": "N/A"
     }
+  },
+  {
+    "timestamp": "2025-09-24T04:17:36.891916",
+    "summary": {
+      "total": 9,
+      "passed": 9,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "coverage": {
+      "overall_coverage": "100%",
+      "details": [
+        {
+          "file": "disaster_app.py",
+          "function": "disaster_app.py",
+          "statements": 29,
+          "missing": 0,
+          "coverage": "100%"
+        }
+      ]
+    },
+    "delta": {
+      "coverage_change": "0.0%",
+      "passed_change": 0,
+      "failed_change": 0
+    }
   }
 ]
