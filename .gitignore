@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Test reports and logs
+reports/report.log
+results.xml
+coverage.xml

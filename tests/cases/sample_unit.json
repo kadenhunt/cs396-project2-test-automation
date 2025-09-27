@@ -1,0 +1,7 @@
+{
+  "id": "TC001",
+  "type": "unit",
+  "description": "Verify parsing of a valid emergency report",
+  "input": {"location": "NYC", "severity": 3},
+  "expected": {"location": "NYC", "severity": 3}
+}

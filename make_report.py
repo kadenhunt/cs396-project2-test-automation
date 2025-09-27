@@ -1,145 +1,166 @@
-# Standard library imports
-import sys                   # lets us read command-line arguments (e.g., file names)
-import xml.etree.ElementTree as ET  # built-in XML parser
-import json                  # for writing the final report as JSON
+import sys
+import xml.etree.ElementTree as ET
+import json
+import os
+import logging
+from datetime import datetime
 
+
+os.makedirs("reports", exist_ok=True)
+
+# Configure logging
+logging.basicConfig(
+    filename="reports/report.log",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 def parse_junit(junit_file):
     """Parse JUnit XML (pytest results) and return summary + failure details."""
-    tree = ET.parse(junit_file)
-    root = tree.getroot()
+    try:
+        tree = ET.parse(junit_file)
+        root = tree.getroot()
+        suite = root.find("testsuite") if root.tag == "testsuites" else root
 
-    # Pytest may wrap everything in <testsuites> → find the first <testsuite>
-    suite = root.find("testsuite") if root.tag == "testsuites" else root
+        total = int(suite.attrib.get("tests", 0))
+        failures = int(suite.attrib.get("failures", 0))
+        errors = int(suite.attrib.get("errors", 0))
+        skipped = int(suite.attrib.get("skipped", 0))
+        passed = total - failures - errors - skipped
 
-    total = int(suite.attrib.get("tests", 0))
-    failures = int(suite.attrib.get("failures", 0))
-    errors = int(suite.attrib.get("errors", 0))
-    skipped = int(suite.attrib.get("skipped", 0))
-    passed = total - failures - errors - skipped
+        failure_details = []
+        for testcase in suite.iter("testcase"):
+            for failure in testcase.iter("failure"):
+                failure_details.append({
+                    "test": testcase.attrib.get("name"),
+                    "classname": testcase.attrib.get("classname"),
+                    "error": failure.attrib.get("message", "").strip(),
+                    "details": failure.text.strip() if failure.text else ""
+                })
 
-    failure_details = []
-    for testcase in suite.iter("testcase"):
-        for failure in testcase.iter("failure"):
-            failure_details.append({
-                "test": testcase.attrib.get("name"),
-                "classname": testcase.attrib.get("classname"),
-                "error": failure.attrib.get("message", "").strip(),
-                "details": failure.text.strip() if failure.text else ""
-            })
-
-    return {
-        "summary": {
-            "total": total,
-            "passed": passed,
-            "failed": failures,
-            "errors": errors,
-            "skipped": skipped
-        },
-        "failures": failure_details
-    }
-    """Parse JUnit XML (pytest results) and return summary + failure details."""
-    tree = ET.parse(junit_file)   # load the XML tree from file
-    root = tree.getroot()         # get the root element <testsuite>
-
-    # Top-level stats are stored as attributes on the <testsuite>
-    total = int(root.attrib.get("tests", 0))
-    failures = int(root.attrib.get("failures", 0))
-    errors = int(root.attrib.get("errors", 0))
-    skipped = int(root.attrib.get("skipped", 0))
-
-    # Calculate passed tests
-    passed = total - failures - errors - skipped
-
-    # Collect details for each failed test case
-    failure_details = []
-    for testcase in root.iter("testcase"):          # loop through <testcase> elements
-        for failure in testcase.iter("failure"):    # check if it has a <failure> tag
-            failure_details.append({
-                "test": testcase.attrib.get("name"),       # test function name
-                "classname": testcase.attrib.get("classname"),  # file/class context
-                "error": failure.attrib.get("message", "").strip(),  # failure summary
-                "details": failure.text.strip() if failure.text else ""  # traceback text
-            })
-
-    # Return structured summary + failures
-    return {
-        "summary": {
-            "total": total,
-            "passed": passed,
-            "failed": failures,
-            "errors": errors,
-            "skipped": skipped
-        },
-        "failures": failure_details
-    }
+        return {
+            "summary": {
+                "total": total,
+                "passed": passed,
+                "failed": failures,
+                "errors": errors,
+                "skipped": skipped
+            },
+            "failures": failure_details
+        }
+    except Exception as e:
+        logging.error(f"Failed to parse JUnit file {junit_file}: {e}")
+        return {"summary": {}, "failures": []}
 
 
 def parse_coverage(cov_file):
     """Parse coverage XML and return overall + per-function stats."""
-    tree = ET.parse(cov_file)   # load coverage.xml
-    root = tree.getroot()       # root <coverage> element
+    try:
+        tree = ET.parse(cov_file)
+        root = tree.getroot()
 
-    # Overall project coverage percentage (line-rate is a 0–1 float)
-    overall = float(root.attrib.get("line-rate", 0)) * 100
+        overall = float(root.attrib.get("line-rate", 0)) * 100
+        coverage_details = []
 
-    coverage_details = []
-    for package in root.iter("package"):     # loop through all packages (modules)
-        for cls in package.iter("class"):   # each <class> is usually a function
-            name = cls.attrib.get("name")
-            filename = cls.attrib.get("filename")
-            line_rate = float(cls.attrib.get("line-rate", 0)) * 100
+        for package in root.iter("package"):
+            for cls in package.iter("class"):
+                name = cls.attrib.get("name")
+                filename = cls.attrib.get("filename")
+                line_rate = float(cls.attrib.get("line-rate", 0)) * 100
 
-            # Count how many statements are present/missing
-            statements = 0
-            missing = 0
-            for line in cls.iter("line"):
-                statements += 1
-                if int(line.attrib.get("hits", 0)) == 0:  # line not covered
-                    missing += 1
+                statements = 0
+                missing = 0
+                for line in cls.iter("line"):
+                    statements += 1
+                    if int(line.attrib.get("hits", 0)) == 0:
+                        missing += 1
 
-            coverage_details.append({
-                "file": filename,
-                "function": name,
-                "statements": statements,
-                "missing": missing,
-                "coverage": f"{line_rate:.0f}%"   # format percentage as whole number
-            })
+                coverage_details.append({
+                    "file": filename,
+                    "function": name,
+                    "statements": statements,
+                    "missing": missing,
+                    "coverage": f"{line_rate:.0f}%"
+                })
 
-    return {
-        "overall_coverage": f"{overall:.0f}%",
-        "details": coverage_details
-    }
+        return {
+            "overall_coverage": f"{overall:.0f}%",
+            "details": coverage_details
+        }
+    except Exception as e:
+        logging.error(f"Failed to parse coverage file {cov_file}: {e}")
+        return {"overall_coverage": "0%", "details": []}
+
+
+def load_history(history_file="reports/history.json"):
+    """Load previous test run history."""
+    if os.path.exists(history_file):
+        with open(history_file, "r") as f:
+            return json.load(f)
+    return []
+
+
+def save_history(history, history_file="reports/history.json"):
+    os.makedirs("reports", exist_ok=True)
+    with open(history_file, "w") as f:
+        json.dump(history, f, indent=2)
 
 
 def make_report(junit_file, cov_file, output_file="final_report.json"):
-    """Combine test results + coverage into a single JSON report."""
     results = parse_junit(junit_file)
     coverage = parse_coverage(cov_file)
 
-    # Build one consolidated object
     final_report = {
+        "timestamp": datetime.utcnow().isoformat(),
         "summary": results["summary"],
         "failures": results["failures"],
         "coverage": coverage
     }
 
-    # Save it as JSON
+    # Load history and compute deltas
+    history = load_history()
+    if history:
+        last = history[-1]
+        final_report["delta"] = {
+            "coverage_change": f"{float(coverage['overall_coverage'].strip('%')) - float(last['coverage']['overall_coverage'].strip('%')):.1f}%",
+            "passed_change": results["summary"].get("passed", 0) - last["summary"].get("passed", 0),
+            "failed_change": results["summary"].get("failed", 0) - last["summary"].get("failed", 0),
+        }
+    else:
+        final_report["delta"] = {"coverage_change": "N/A", "passed_change": "N/A", "failed_change": "N/A"}
+
+    # Save the current report
+    out_dir = os.path.dirname(output_file) or "."
+    os.makedirs(out_dir, exist_ok=True)
     with open(output_file, "w") as f:
         json.dump(final_report, f, indent=2)
 
+
+    # Update history
+    history.append(final_report)
+    save_history(history)
+
+    logging.info(f"Final report written to {output_file}")
     print(f"[INFO] Final report written to {output_file}")
+
+    # Show a quick trend summary in console
+    print("\n=== Test Trend (last 5 runs) ===")
+    for run in history[-5:]:
+        ts = run["timestamp"]
+        passed = run["summary"].get("passed", 0)
+        failed = run["summary"].get("failed", 0)
+        cov = run["coverage"]["overall_coverage"]
+        print(f"{ts} | Passed: {passed} | Failed: {failed} | Coverage: {cov}")
+    print("================================\n")
 
 
 if __name__ == "__main__":
-    # Require at least 2 arguments: results.xml + coverage.xml
     if len(sys.argv) < 3:
         print("Usage: python make_report.py results.xml coverage.xml [output.json]")
         sys.exit(1)
 
-    junit_file = sys.argv[1]                   # first arg: path to results.xml
-    cov_file = sys.argv[2]                     # second arg: path to coverage.xml
+    junit_file = sys.argv[1]
+    cov_file = sys.argv[2]
     output_file = sys.argv[3] if len(sys.argv) > 3 else "final_report.json"
 
-    # Generate the combined report
     make_report(junit_file, cov_file, output_file)

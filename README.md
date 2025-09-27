@@ -1,62 +1,88 @@
 # CS 396 Project 2 – Test Automation Framework
 
 ## Team
-- Kaden Hunt  
-- Nate Barner
 
-Overview
+- **Kaden Hunt**
+- **Nate Barner**
 
-This project delivers a test automation framework designed to improve code quality in a distributed disaster response coordination system.
-It supports unit, integration, and system testing to catch defects early, while integrating with CI/CD pipelines for automated execution and immediate feedback.
+## Overview
 
-The framework emphasizes scalability, speed, and security, ensuring reliable test runs in under five minutes, with robust error handling and secure configuration management.
-A small dummy application (in /app) is included as the demonstration target system.
+This project delivers a test automation framework for a distributed disaster response coordination system. It supports unit, integration, and system testing, integrates with CI/CD pipelines for immediate feedback, and generates detailed reports with historical trends to track software quality over time.
 
-Features
+### Key Goals of the Framework
 
-- Unit tests for isolated components
+- Improve reliability by catching defects early.
+- Provide fast, automated test execution (<5 minutes).
+- Scale to support additional test cases and workflows.
+- Protect test data while keeping historical reports version-controlled.
 
-- Integration tests for application + database interactions
+## Features
 
-- System tests for end-to-end workflows
-
-- Test case management using structured YAML/JSON files (tests/cases/) with easy creation, modification, and organization
-
-- Runner script (runner.py) to launch tests by type or case ID via a simple CLI
-
-- Reporting with pass/fail summaries, error logs, coverage metrics, and historical tracking
-
-- Error handling & logging to capture failures and exceptions with actionable detail
-
-- CI/CD integration via GitHub Actions for automated runs on every push or pull request
-
-- Fast execution optimized to complete test suites within minutes for rapid feedback
-
-- Scalability to support growth in both number and complexity of test cases without performance loss
-
-- Security practices to protect test data and configuration details
-
-- Usability through clear folder structure, documentation, and onboarding guidance for new developers
-
-## Requirements
-- Python 
-- Install dependencies:
-
-```bash
-pip install -r requirements.txt
-````
+- **Unit tests** – Verify isolated functions (`tests/test_disaster_unit.py`).
+- **Integration tests** – Validate interactions between components (`tests/test_disaster_integration.py`).
+- **System tests** – Simulate end-to-end workflows (`tests/test_disaster_system.py`).
+- **Test case management** – JSON case files stored in `tests/cases/`, organized and run through a CLI.
+- **Runner (`runner.py`)** – List or run tests by type or ID:
+    ```bash
+    python runner.py --list        # list all cases  
+    python runner.py --type unit   # run all unit tests  
+    python runner.py --case TC001  # run a specific case  
+    ```
+- **Reporting (`make_report.py`)** – Combines test results and coverage into `reports/final_report.json`, appends results to `reports/history.json`, computes deltas, and prints trend summaries to the console.
+- **Logging & error handling** – All report generation wrapped with robust logging (`reports/report.log`, generated locally and ignored by git).
+- **CI/CD integration** – GitHub Actions workflow runs on each push/PR, executes the full test suite, manages historical results, and uploads artifacts (`results.xml`, `coverage.xml`, `reports/final_report.json`, `reports/history.json`).
 
 ## Repository Structure
 
 ```
-app/            # Dummy application
-tests/          # Test files + case descriptions
-runner.py       # CLI runner for test cases
-requirements.txt
-.github/        # CI/CD pipeline config
-docs/           # Technical & organizational documentation
+cs396-project2-test-automation/
+│── disaster_app.py          # disaster response app functions
+│── make_report.py           # combines test results, coverage, history
+│── runner.py                # CLI runner for test cases
+│── requirements.txt         # dependencies (pytest, pytest-cov)
+│── .gitignore               # excludes build artifacts (keeps versioned reports)
+│── .github/workflows/ci.yml # CI/CD pipeline config
+│── tests/
+│   ├── test_disaster_unit.py
+│   ├── test_disaster_integration.py
+│   ├── test_disaster_system.py
+│   └── cases/               # JSON test case definitions
+│── reports/
+        ├── final_report.json     # latest combined results (committed for reference)
+        ├── history.json          # historical trends tracked in git
+        └── report.log            # error/info logs (ignored from version control)
 ```
 
-## Demo
+## Setup
 
-A demo video, presentation slides, and documentation will be added before submission.
+1. Install dependencies:
+     ```bash
+     pip install -r requirements.txt
+     ```
+
+2. Run all tests locally with coverage and export the artifacts expected by the report generator:
+     ```bash
+     PYTHONPATH=. pytest tests/ --junitxml=results.xml --cov=disaster_app --cov-report=xml --cov-report=term
+     ```
+
+3. Generate a combined report manually:
+     ```bash
+     python make_report.py results.xml coverage.xml reports/final_report.json
+     ```
+
+## CI/CD Workflow
+
+On each push or pull request to `main`:
+
+1. GitHub Actions sets up Python and installs dependencies.
+2. `runner.py` can be used to list or run test cases.
+3. `pytest` executes all unit, integration, and system tests with coverage.
+4. `make_report.py` produces a final combined report, appends history, and prints a trend summary in the console.
+5. Updated `reports/history.json` and `reports/final_report.json` are committed back to `main`, and artifacts remain available for download from the Actions tab.
+
+
+## Closing Note
+
+A lightweight, extensible framework that automates testing, integrates with CI/CD, and provides historical insight into code quality.
+
+**Go Tops!**
